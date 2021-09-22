@@ -1,0 +1,17 @@
+[package]
+name = "fixred"
+version = "0.1.0"
+edition = "2018"
+authors = ["rhysd <lin90162@yahoo.co.jp>"]
+description = "Command line tool to fix HTTP URL links in files to the redirected links"
+license = "MIT"
+homepage = "https://github.com/rhysd/fixred#readme"
+repository = "https://github.com/rhysd/fixred"
+readme = "README.md"
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
