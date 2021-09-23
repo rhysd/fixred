@@ -15,3 +15,10 @@ maintenance = { status = "actively-developed" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+aho-corasick = "0.7"
+anyhow = "1"
+chashmap = "2"
+clap = { version = "3.0.0-beta", default-features = false, features = ["std", "cargo", "color", "suggestions", "unicode_help"] }
+curl = "0.4"
+rayon = "1"
+walkdir = "2"
