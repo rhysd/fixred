@@ -84,15 +84,25 @@ impl Redirector {
             .find_iter(&content)
             .filter_map(|m| {
                 let start = m.start();
-                let mut end = m.end();
+                let end = m.end();
 
+                let mut saw_term = false;
+                let mut idx = 0;
                 for (i, c) in content[end..].char_indices() {
+                    if saw_term {
+                        idx = i;
+                        saw_term = false;
+                    }
                     match url_char_kind(c) {
                         Char::NonTerm => {}
-                        Char::Term => end = i,
+                        Char::Term => {
+                            idx = i;
+                            saw_term = true;
+                        }
                         Char::Invalid => break,
                     }
                 }
+                let end = end + idx;
 
                 match self.resolve(&content[start..end]) {
                     Ok(u) => u.map(|u| Ok(Replacement(start, end, u))),
