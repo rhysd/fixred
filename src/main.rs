@@ -69,9 +69,12 @@ impl Redirector {
         }
 
         let mut curl = Easy::new();
+        curl.follow_location(true)?;
         curl.url(url)?;
         curl.perform()?;
-        let red = curl.redirect_url()?.map(str::to_string);
+        let red = curl
+            .effective_url()?
+            .and_then(|u| (u != url).then(|| u.to_string()));
         info!("resolved redirect: {} -> {:?}", url, red);
         self.cache.insert(url.to_string(), red.clone());
         Ok(red)
