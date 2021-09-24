@@ -4,7 +4,6 @@ use chashmap::CHashMap;
 use clap::{App, Arg};
 use curl::easy::Easy;
 use log::info;
-use rayon::iter::ParallelBridge;
 use rayon::prelude::*;
 use std::ffi::OsStr;
 use std::fs;
@@ -47,6 +46,46 @@ fn url_char_kind(c: char) -> Char {
     }
 }
 
+struct UrlFinder {
+    ac: AhoCorasick,
+}
+
+impl UrlFinder {
+    fn new() -> Self {
+        let ac = AhoCorasick::new(&["https://", "http://"]);
+        Self { ac }
+    }
+
+    fn find_all(&self, content: &str) -> Vec<(usize, usize)> {
+        self.ac
+            .find_iter(content)
+            .map(|m| {
+                let start = m.start();
+                let end = m.end();
+
+                let mut saw_term = false;
+                let mut idx = 0;
+                for (i, c) in content[end..].char_indices() {
+                    if saw_term {
+                        idx = i;
+                        saw_term = false;
+                    }
+                    match url_char_kind(c) {
+                        Char::NonTerm => {}
+                        Char::Term => {
+                            idx = i;
+                            saw_term = true;
+                        }
+                        Char::Invalid => break,
+                    }
+                }
+                let end = end + idx;
+                (start, end)
+            })
+            .collect()
+    }
+}
+
 struct Redirector {
     cache: CHashMap<String, Option<String>>,
 }
@@ -84,38 +123,14 @@ impl Redirector {
         info!("fixing redirects in {:?}", &file);
 
         let content = fs::read_to_string(&file)?;
-
-        let ac = AhoCorasick::new(&["https://", "http://"]);
-        let replacements = ac
-            .find_iter(&content)
-            .filter_map(|m| {
-                let start = m.start();
-                let end = m.end();
-
-                let mut saw_term = false;
-                let mut idx = 0;
-                for (i, c) in content[end..].char_indices() {
-                    if saw_term {
-                        idx = i;
-                        saw_term = false;
-                    }
-                    match url_char_kind(c) {
-                        Char::NonTerm => {}
-                        Char::Term => {
-                            idx = i;
-                            saw_term = true;
-                        }
-                        Char::Invalid => break,
-                    }
-                }
-                let end = end + idx;
-
-                match self.resolve(&content[start..end]) {
-                    Ok(u) => u.map(|u| Ok(Replacement(start, end, u))),
-                    Err(e) => Some(Err(e)),
-                }
+        let spans = UrlFinder::new().find_all(&content); // Collect to Vec to use par_iter which is more efficient than par_bridge
+        let replacements = spans
+            .into_par_iter()
+            .filter_map(|(start, end)| match self.resolve(&content[start..end]) {
+                Ok(u) => u.map(|u| Ok(Replacement(start, end, u))),
+                Err(e) => Some(Err(e)),
             })
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<Result<Vec<_>>>()?; // Collect to Vec to check errors before overwriting files
 
         let out = fs::File::create(&file)?;
         let len = replacements.len();
@@ -133,10 +148,7 @@ impl Redirector {
                 Ok(e) => e.metadata().map(|m| m.is_file()).unwrap_or(false),
                 Err(_) => true,
             })
-            .map(|e| Result::<_>::Ok(e?.into_path()))
-            .par_bridge()
-            .map(|p| self.redirect(p?))
-            .collect::<Result<()>>()
+            .try_for_each(|e| self.redirect(e?.into_path()))
     }
 }
 
