@@ -3,7 +3,7 @@ use anyhow::Result;
 use chashmap::CHashMap;
 use clap::{App, Arg};
 use curl::easy::Easy;
-use log::info;
+use log::{debug, info};
 use rayon::prelude::*;
 use std::ffi::OsStr;
 use std::fs;
@@ -101,9 +101,9 @@ impl Default for Redirector {
 impl Redirector {
     fn resolve(&self, url: impl AsRef<str>) -> Result<Option<String>> {
         let url = url.as_ref();
-        info!("resolving {}", url);
+        debug!("Resolving {}", url);
         if let Some(u) = self.cache.get(url) {
-            info!("cache hit: {} -> {:?}", url, *u);
+            debug!("Cache hit: {} -> {:?}", url, *u);
             return Ok(u.clone());
         }
 
@@ -114,16 +114,18 @@ impl Redirector {
         let red = curl
             .effective_url()?
             .and_then(|u| (u != url).then(|| u.to_string()));
-        info!("resolved redirect: {} -> {:?}", url, red);
+        debug!("Resolved redirect: {} -> {:?}", url, red);
         self.cache.insert(url.to_string(), red.clone());
         Ok(red)
     }
 
     fn redirect(&self, file: PathBuf) -> Result<()> {
-        info!("fixing redirects in {:?}", &file);
+        info!("Fixing redirects in {:?}", &file);
 
         let content = fs::read_to_string(&file)?;
         let spans = UrlFinder::new().find_all(&content); // Collect to Vec to use par_iter which is more efficient than par_bridge
+        debug!("Found {} links in {:?}", spans.len(), &file);
+
         let replacements = spans
             .into_par_iter()
             .filter_map(|(start, end)| match self.resolve(&content[start..end]) {
@@ -136,19 +138,20 @@ impl Redirector {
         let len = replacements.len();
         replace_all(out, &content, replacements)?;
 
-        info!("fixed {} links in {:?}", len, &file);
+        info!("Fixed {} links in {:?}", len, &file);
         Ok(())
     }
 
     fn redirect_all<'a>(&self, paths: impl Iterator<Item = &'a OsStr> + Send) -> Result<()> {
-        info!("fixing redirects in all given paths");
-        paths
+        let count = paths
             .flat_map(WalkDir::new)
             .filter(|e| match e {
                 Ok(e) => e.metadata().map(|m| m.is_file()).unwrap_or(false),
                 Err(_) => true,
             })
-            .try_for_each(|e| self.redirect(e?.into_path()))
+            .try_fold(0, |c, e| self.redirect(e?.into_path()).map(|_| c + 1))?;
+        info!("Processed {} files", count);
+        Ok(())
     }
 }
 
@@ -162,7 +165,7 @@ fn main() -> Result<()> {
         )
         .get_matches();
     if let Some(paths) = matches.values_of_os("PATH") {
-        info!("some paths are given via arguments");
+        debug!("Some paths are given via arguments");
         let red = Redirector::default();
         red.redirect_all(paths)
     } else {
