@@ -8,7 +8,7 @@ use rayon::prelude::*;
 use std::ffi::OsStr;
 use std::fs;
 use std::io;
-use std::io::{Read, Write};
+use std::io::{BufWriter, Read, Write};
 use std::path::PathBuf;
 use walkdir::WalkDir;
 
@@ -135,7 +135,7 @@ impl Redirector {
             })
             .collect::<Result<Vec<_>>>()?; // Collect to Vec to check errors before overwriting files
         let len = replacements.len();
-        replace_all(out, &content, replacements.into_iter())?;
+        replace_all(out, content, replacements.into_iter())?;
         Ok(len)
     }
 
@@ -144,6 +144,7 @@ impl Redirector {
 
         let content = fs::read_to_string(&file)?;
         let out = fs::File::create(&file)?;
+        let out = BufWriter::new(out);
         let count = self.find_and_replace(out, &content)?;
 
         info!("Fixed {} links in {:?}", count, &file);
