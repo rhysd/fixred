@@ -38,18 +38,13 @@ impl UrlFinder {
                 let start = m.start();
                 let end = m.end();
 
-                let mut saw_term = false;
                 let mut idx = 0;
                 for (i, c) in content[end..].char_indices() {
-                    if saw_term {
-                        idx = i;
-                        saw_term = false;
-                    }
                     match url_char_kind(c) {
                         Char::NonTerm => {}
                         Char::Term => {
-                            idx = i;
-                            saw_term = true;
+                            // Since range is [start, end), idx should be index of the next character
+                            idx = i + c.len_utf8();
                         }
                         Char::Invalid => break,
                     }
