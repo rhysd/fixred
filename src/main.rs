@@ -1,12 +1,15 @@
-use anyhow::Result;
-use clap::{App, AppSettings, Arg};
-use log::{debug, info};
-use regex::Regex;
-use std::io;
-
 mod redirect;
 mod replace;
+mod resolve;
 mod url;
+
+use anyhow::Result;
+use clap::{App, AppSettings, Arg};
+use log::info;
+use redirect::Redirector;
+use regex::Regex;
+use resolve::CurlResolver;
+use std::io;
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -36,26 +39,21 @@ fn main() -> Result<()> {
         )
         .get_matches();
 
-    let mut red = redirect::Redirector::default();
-    if let Some(r) = matches.value_of("select").map(Regex::new).transpose()? {
-        debug!("Regex to select URLs: {:?}", r);
-        red = red.select(r);
-    }
-    if let Some(r) = matches.value_of("reject").map(Regex::new).transpose()? {
-        debug!("Regex to reject URLs: {:?}", r);
-        red = red.reject(r);
-    }
-    let red = red;
+    let red = Redirector::<CurlResolver>::default()
+        .select(matches.value_of("select").map(Regex::new).transpose()?)
+        .reject(matches.value_of("reject").map(Regex::new).transpose()?);
 
     if let Some(paths) = matches.values_of_os("PATH") {
-        debug!("Some paths are given via arguments");
-        red.fix_all_files(paths)
+        info!("Processing all files in given paths via command line arguments");
+        let count = red.fix_all_files(paths)?;
+        info!("Processed {} files", count);
     } else {
         info!("Fixing redirects in stdin");
         let stdin = io::stdin();
         let stdout = io::stdout();
         let count = red.fix(stdin.lock(), stdout.lock())?;
         info!("Fixed {} links in stdin", count);
-        Ok(())
     }
+
+    Ok(())
 }

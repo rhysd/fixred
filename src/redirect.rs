@@ -1,8 +1,7 @@
 use crate::replace::{replace_all, Replacement};
+use crate::resolve::Resolver;
 use crate::url::UrlFinder;
 use anyhow::Result;
-use chashmap::CHashMap;
-use curl::easy::Easy;
 use log::{debug, info};
 use rayon::prelude::*;
 use regex::Regex;
@@ -12,65 +11,22 @@ use std::io::{BufWriter, Read, Write};
 use std::path::PathBuf;
 use walkdir::WalkDir;
 
-pub struct Redirector {
-    select: Option<Regex>,
-    reject: Option<Regex>,
-    cache: CHashMap<String, Option<String>>,
+#[derive(Default)]
+pub struct Redirector<R: Resolver> {
+    resolver: R,
 }
 
-impl Default for Redirector {
-    fn default() -> Self {
-        Self {
-            select: None,
-            reject: None,
-            cache: CHashMap::new(),
-        }
-    }
-}
-
-impl Redirector {
-    pub fn select(mut self, r: Regex) -> Self {
-        self.select = Some(r);
+impl<R: Resolver> Redirector<R> {
+    pub fn select(mut self, r: Option<Regex>) -> Self {
+        debug!("Regex to select URLs: {:?}", r);
+        self.resolver.select(r);
         self
     }
 
-    pub fn reject(mut self, r: Regex) -> Self {
-        self.reject = Some(r);
+    pub fn reject(mut self, r: Option<Regex>) -> Self {
+        debug!("Regex to reject URLs: {:?}", r);
+        self.resolver.reject(r);
         self
-    }
-
-    fn is_match_url(&self, url: &str) -> bool {
-        if let Some(r) = &self.select {
-            if !r.is_match(url) {
-                return false;
-            }
-        }
-        if let Some(r) = &self.reject {
-            if r.is_match(url) {
-                return false;
-            }
-        }
-        true
-    }
-
-    fn resolve(&self, url: impl AsRef<str>) -> Result<Option<String>> {
-        let url = url.as_ref();
-        debug!("Resolving {}", url);
-        if let Some(u) = self.cache.get(url) {
-            debug!("Cache hit: {} -> {:?}", url, *u);
-            return Ok(u.clone());
-        }
-
-        let mut curl = Easy::new();
-        curl.follow_location(true)?;
-        curl.url(url)?;
-        curl.perform()?;
-        let red = curl
-            .effective_url()?
-            .and_then(|u| (u != url && self.is_match_url(u)).then(|| u.to_string()));
-        debug!("Resolved redirect: {} -> {:?}", url, red);
-        self.cache.insert(url.to_string(), red.clone());
-        Ok(red)
     }
 
     fn find_and_replace<W: Write>(&self, out: W, content: &str) -> Result<usize> {
@@ -78,12 +34,15 @@ impl Redirector {
         debug!("Found {} links", spans.len());
         let replacements = spans
             .into_par_iter()
-            .filter_map(|(start, end)| match self.resolve(&content[start..end]) {
-                Ok(u) => u.map(|text| Ok(Replacement { start, end, text })),
-                Err(e) => Some(Err(e)),
-            })
+            .filter_map(
+                |(start, end)| match self.resolver.resolve(&content[start..end]) {
+                    Ok(u) => u.map(|text| Ok(Replacement { start, end, text })),
+                    Err(e) => Some(Err(e)),
+                },
+            )
             .collect::<Result<Vec<_>>>()?; // Collect to Vec to check errors before overwriting files
         let len = replacements.len();
+        debug!("Found {} redirects", len);
         replace_all(out, content, replacements.into_iter())?;
         Ok(len)
     }
@@ -100,7 +59,7 @@ impl Redirector {
         Ok(())
     }
 
-    pub fn fix_all_files<'a>(&self, paths: impl Iterator<Item = &'a OsStr> + Send) -> Result<()> {
+    pub fn fix_all_files<'a>(&self, paths: impl Iterator<Item = &'a OsStr>) -> Result<usize> {
         let count = paths
             .flat_map(WalkDir::new)
             .filter(|e| match e {
@@ -108,11 +67,10 @@ impl Redirector {
                 Err(_) => true,
             })
             .try_fold(0, |c, e| self.fix_file(e?.into_path()).map(|_| c + 1))?;
-        info!("Processed {} files", count);
-        Ok(())
+        Ok(count)
     }
 
-    pub fn fix<R: Read, W: Write>(&self, mut reader: R, writer: W) -> Result<usize> {
+    pub fn fix<T: Read, U: Write>(&self, mut reader: T, writer: U) -> Result<usize> {
         let mut content = String::new();
         reader.read_to_string(&mut content)?;
         let content = &content;
