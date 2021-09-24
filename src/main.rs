@@ -3,6 +3,7 @@ use anyhow::Result;
 use chashmap::CHashMap;
 use clap::{App, Arg};
 use curl::easy::Easy;
+use log::info;
 use rayon::iter::ParallelBridge;
 use rayon::prelude::*;
 use std::ffi::OsStr;
@@ -61,9 +62,9 @@ impl Default for Redirector {
 impl Redirector {
     fn resolve(&self, url: impl AsRef<str>) -> Result<Option<String>> {
         let url = url.as_ref();
-        println!("start!: {:?}", url);
+        info!("resolving {}", url);
         if let Some(u) = self.cache.get(url) {
-            println!("cache!: {:?} -> {:?}", url, u);
+            info!("cache hit: {} -> {:?}", url, *u);
             return Ok(u.clone());
         }
 
@@ -71,12 +72,14 @@ impl Redirector {
         curl.url(url)?;
         curl.perform()?;
         let red = curl.redirect_url()?.map(str::to_string);
-        println!("res: {} -> {:?}", url, red);
+        info!("resolved redirect: {} -> {:?}", url, red);
         self.cache.insert(url.to_string(), red.clone());
         Ok(red)
     }
 
     fn redirect(&self, file: PathBuf) -> Result<()> {
+        info!("fixing redirects in {:?}", &file);
+
         let content = fs::read_to_string(&file)?;
 
         let ac = AhoCorasick::new(&["https://", "http://"]);
@@ -112,10 +115,15 @@ impl Redirector {
             .collect::<Result<Vec<_>>>()?;
 
         let out = fs::File::create(&file)?;
-        replace_all(out, &content, replacements)
+        let len = replacements.len();
+        replace_all(out, &content, replacements)?;
+
+        info!("fixed {} links in {:?}", len, &file);
+        Ok(())
     }
 
     fn redirect_all<'a>(&self, paths: impl Iterator<Item = &'a OsStr> + Send) -> Result<()> {
+        info!("fixing redirects in all given paths");
         paths
             .flat_map(WalkDir::new)
             .filter(|e| match e {
@@ -130,6 +138,7 @@ impl Redirector {
 }
 
 fn main() -> Result<()> {
+    env_logger::init();
     let matches = App::new("fixred")
         .arg(
             Arg::new("PATH")
@@ -138,6 +147,7 @@ fn main() -> Result<()> {
         )
         .get_matches();
     if let Some(paths) = matches.values_of_os("PATH") {
+        info!("some paths are given via arguments");
         let red = Redirector::default();
         red.redirect_all(paths)
     } else {
