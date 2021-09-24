@@ -1,6 +1,7 @@
 use anyhow::Result;
-use clap::{App, Arg};
+use clap::{App, AppSettings, Arg};
 use log::{debug, info};
+use regex::Regex;
 use std::io;
 
 mod redirect;
@@ -11,6 +12,23 @@ fn main() -> Result<()> {
     env_logger::init();
 
     let matches = App::new("fixred")
+        .global_setting(AppSettings::ColoredHelp)
+        .arg(
+            Arg::new("select")
+                .short('s')
+                .long("select")
+                .takes_value(true)
+                .value_name("REGEX")
+                .about("Redirect URLs which are matched to this pattern"),
+        )
+        .arg(
+            Arg::new("reject")
+                .short('r')
+                .long("reject")
+                .takes_value(true)
+                .value_name("REGEX")
+                .about("Redirect URLs which are NOT matched to this pattern"),
+        )
         .arg(
             Arg::new("PATH")
                 .about("Directory or file path to fix")
@@ -18,7 +36,17 @@ fn main() -> Result<()> {
         )
         .get_matches();
 
-    let red = redirect::Redirector::default();
+    let mut red = redirect::Redirector::default();
+    if let Some(r) = matches.value_of("select").map(Regex::new).transpose()? {
+        debug!("Regex to select URLs: {:?}", r);
+        red = red.select(r);
+    }
+    if let Some(r) = matches.value_of("reject").map(Regex::new).transpose()? {
+        debug!("Regex to reject URLs: {:?}", r);
+        red = red.reject(r);
+    }
+    let red = red;
+
     if let Some(paths) = matches.values_of_os("PATH") {
         debug!("Some paths are given via arguments");
         red.fix_all_files(paths)

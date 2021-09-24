@@ -5,6 +5,7 @@ use chashmap::CHashMap;
 use curl::easy::Easy;
 use log::{debug, info};
 use rayon::prelude::*;
+use regex::Regex;
 use std::ffi::OsStr;
 use std::fs;
 use std::io::{BufWriter, Read, Write};
@@ -12,18 +13,46 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 
 pub struct Redirector {
+    select: Option<Regex>,
+    reject: Option<Regex>,
     cache: CHashMap<String, Option<String>>,
 }
 
 impl Default for Redirector {
     fn default() -> Self {
         Self {
+            select: None,
+            reject: None,
             cache: CHashMap::new(),
         }
     }
 }
 
 impl Redirector {
+    pub fn select(mut self, r: Regex) -> Self {
+        self.select = Some(r);
+        self
+    }
+
+    pub fn reject(mut self, r: Regex) -> Self {
+        self.reject = Some(r);
+        self
+    }
+
+    fn is_match_url(&self, url: &str) -> bool {
+        if let Some(r) = &self.select {
+            if !r.is_match(url) {
+                return false;
+            }
+        }
+        if let Some(r) = &self.reject {
+            if r.is_match(url) {
+                return false;
+            }
+        }
+        true
+    }
+
     fn resolve(&self, url: impl AsRef<str>) -> Result<Option<String>> {
         let url = url.as_ref();
         debug!("Resolving {}", url);
@@ -38,7 +67,7 @@ impl Redirector {
         curl.perform()?;
         let red = curl
             .effective_url()?
-            .and_then(|u| (u != url).then(|| u.to_string()));
+            .and_then(|u| (u != url && self.is_match_url(u)).then(|| u.to_string()));
         debug!("Resolved redirect: {} -> {:?}", url, red);
         self.cache.insert(url.to_string(), red.clone());
         Ok(red)

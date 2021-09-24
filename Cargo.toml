@@ -23,4 +23,8 @@ curl = "0.4"
 env_logger = { version = "0.9", default-features = false, features = ["termcolor", "atty", "humantime"] }
 log = "0.4"
 rayon = "1"
+regex = "1"
 walkdir = "2"
+
+[features]
+default = []
