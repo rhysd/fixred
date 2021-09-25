@@ -3,6 +3,7 @@ use crate::resolve::{CurlResolver, Resolver};
 use crate::url::UrlFinder;
 use anyhow::{Context, Result};
 use log::{debug, info};
+use rayon::iter::ParallelBridge;
 use rayon::prelude::*;
 use regex::Regex;
 use std::ffi::OsStr;
@@ -85,8 +86,11 @@ impl<R: Resolver> Redirector<R> {
         Ok(())
     }
 
-    pub fn fix_all_files<'a>(&self, paths: impl Iterator<Item = &'a OsStr>) -> Result<usize> {
-        let count = paths
+    pub fn fix_all_files<'a, I>(&self, paths: I) -> Result<usize>
+    where
+        I: Iterator<Item = &'a OsStr> + Send,
+    {
+        paths
             .flat_map(WalkDir::new)
             .filter_map(|entry| match entry {
                 Ok(entry) => match entry.metadata() {
@@ -96,13 +100,14 @@ impl<R: Resolver> Redirector<R> {
                 },
                 Err(err) => Some(Err(err)),
             })
-            .try_fold(0, |count, entry| {
+            .par_bridge()
+            .map(|entry| {
                 let path = entry?.into_path();
                 self.fix_file(&path)
-                    .map(|_| count + 1)
-                    .with_context(|| format!("While processing {:?}", &path))
-            })?;
-        Ok(count)
+                    .with_context(|| format!("While processing {:?}", &path))?;
+                Ok(1)
+            })
+            .sum()
     }
 
     pub fn fix<T: Read, U: Write>(&self, mut reader: T, writer: U) -> Result<usize> {
