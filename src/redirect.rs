@@ -1,6 +1,6 @@
 use crate::replace::{replace_all, Replacement};
 use crate::resolve::{CurlResolver, Resolver};
-use crate::url::UrlFinder;
+use crate::url::find_all_urls;
 use anyhow::{Context, Result};
 use log::{debug, info};
 use rayon::prelude::*;
@@ -51,8 +51,8 @@ impl<R: Resolver> Redirector<R> {
         true
     }
 
-    fn find_and_replace<W: Write>(&self, out: W, content: &str) -> Result<usize> {
-        let spans = UrlFinder::new().find_all(content); // Collect to Vec to use par_iter which is more efficient than par_bridge
+    fn find_replacements(&self, content: &str) -> Result<Vec<Replacement>> {
+        let spans = find_all_urls(content); // Collect to Vec to use par_iter which is more efficient than par_bridge
         debug!("Found {} links", spans.len());
         let replacements = spans
             .into_par_iter()
@@ -67,19 +67,19 @@ impl<R: Resolver> Redirector<R> {
             })
             .collect::<Result<Vec<_>>>()?; // Collect to Vec to check errors before overwriting files
         debug!("Found {} redirects", replacements.len());
-        replace_all(out, content, &replacements)?;
-        Ok(replacements.len())
+        Ok(replacements)
     }
 
     pub fn fix_file(&self, file: &Path) -> Result<()> {
         info!("Fixing redirects in {:?}", &file);
 
         let content = fs::read_to_string(&file)?;
-        let mut out = BufWriter::new(fs::File::create(&file)?);
-        let count = self.find_and_replace(&mut out, &content)?;
+        let replacements = self.find_replacements(&content)?;
+        let mut out = BufWriter::new(fs::File::create(&file)?); // Truncate the file after all replacements are collected without error
+        replace_all(&mut out, &content, &replacements)?;
         out.flush()?;
 
-        info!("Fixed {} links in {:?}", count, &file);
+        info!("Fixed {} links in {:?}", replacements.len(), &file);
         Ok(())
     }
 
@@ -103,11 +103,13 @@ impl<R: Resolver> Redirector<R> {
             .sum::<Result<usize>>()
     }
 
-    pub fn fix<T: Read, U: Write>(&self, mut reader: T, writer: U) -> Result<usize> {
+    pub fn fix<T: Read, U: Write>(&self, mut input: T, output: U) -> Result<usize> {
         let mut content = String::new();
-        reader.read_to_string(&mut content)?;
+        input.read_to_string(&mut content)?;
         let content = &content;
-        self.find_and_replace(writer, content)
+        let replacements = self.find_replacements(content)?;
+        replace_all(output, content, &replacements)?;
+        Ok(replacements.len())
     }
 }
 
