@@ -15,6 +15,16 @@ fn main() -> Result<()> {
     env_logger::init();
 
     let matches = App::new("fixred")
+        .version(env!("CARGO_PKG_VERSION"))
+        .about(
+            "fixred is a tool to fix outdated links in text files. fixred replaces all HTTP and HTTPS \
+            URLs with their redirect ones. fixred follows redirects repeatedly and uses the last URL to \
+            replace.\n\n\
+            Filtering URLs to be fixed is supported. See descriptions of --select and --reject options.\n\n\
+            To enable verbose output, set $RUST_LOG environment variable. Setting RUST_LOG=info outputs \
+            which file is being processed. Setting RUST_LOG=debug outputs what fixred is doing.\n\n\
+            Visit https://github.com/rhysd/fixred#readme for more details.",
+        )
         .global_setting(AppSettings::ColoredHelp)
         .arg(
             Arg::new("select")
@@ -22,7 +32,7 @@ fn main() -> Result<()> {
                 .long("select")
                 .takes_value(true)
                 .value_name("REGEX")
-                .about("Redirect URLs which are matched to this pattern"),
+                .about("Fix URLs which are matched to this pattern."),
         )
         .arg(
             Arg::new("reject")
@@ -30,11 +40,15 @@ fn main() -> Result<()> {
                 .long("reject")
                 .takes_value(true)
                 .value_name("REGEX")
-                .about("Redirect URLs which are NOT matched to this pattern"),
+                .about("Fix URLs which are NOT matched to this pattern."),
         )
         .arg(
             Arg::new("PATH")
-                .about("Directory or file path to fix")
+                .about(
+                    "Directory or file path to fix. When a directory path is given, all files in it \
+                    are fixed recursively. When no path is given, fixred reads input from stdin and \
+                    outputs the result to stdout.",
+                )
                 .multiple_values(true),
         )
         .get_matches();
