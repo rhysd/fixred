@@ -75,6 +75,10 @@ impl<R: Resolver> Redirector<R> {
 
         let content = fs::read_to_string(&file)?;
         let replacements = self.find_replacements(&content)?;
+        if replacements.is_empty() {
+            info!("Fixed no link in {:?}", &file);
+            return Ok(());
+        }
         let mut out = BufWriter::new(fs::File::create(&file)?); // Truncate the file after all replacements are collected without error
         replace_all(&mut out, &content, &replacements)?;
         out.flush()?;
