@@ -1,5 +1,5 @@
 use crate::replace::{replace_all, Replacement};
-use crate::resolve::Resolver;
+use crate::resolve::{CurlResolver, Resolver};
 use crate::url::UrlFinder;
 use anyhow::Result;
 use log::{debug, info};
@@ -17,15 +17,21 @@ pub struct Redirector<R: Resolver> {
 }
 
 impl<R: Resolver> Redirector<R> {
-    pub fn select(mut self, r: Option<Regex>) -> Self {
-        debug!("Regex to select URLs: {:?}", r);
-        self.resolver.select(r);
+    pub fn extract(mut self, r: Option<Regex>) -> Self {
+        debug!("Regex to extract URLs: {:?}", r);
+        self.resolver.extract(r);
         self
     }
 
-    pub fn reject(mut self, r: Option<Regex>) -> Self {
-        debug!("Regex to reject URLs: {:?}", r);
-        self.resolver.reject(r);
+    pub fn ignore(mut self, r: Option<Regex>) -> Self {
+        debug!("Regex to ignore URLs: {:?}", r);
+        self.resolver.ignore(r);
+        self
+    }
+
+    pub fn shallow(mut self, b: bool) -> Self {
+        debug!("Shallow redirect?: {}", b);
+        self.resolver.shallow(b);
         self
     }
 
@@ -76,3 +82,5 @@ impl<R: Resolver> Redirector<R> {
         self.find_and_replace(writer, content)
     }
 }
+
+pub type CurlRedirector = Redirector<CurlResolver>;

@@ -1,14 +1,13 @@
-mod redirect;
-mod replace;
-mod resolve;
-mod url;
+pub mod redirect;
+pub mod replace;
+pub mod resolve;
+pub mod url;
 
 use anyhow::Result;
 use clap::{App, AppSettings, Arg};
 use log::info;
-use redirect::Redirector;
+use redirect::CurlRedirector;
 use regex::Regex;
-use resolve::CurlResolver;
 use std::io;
 
 fn main() -> Result<()> {
@@ -21,44 +20,52 @@ fn main() -> Result<()> {
         .version(env!("CARGO_PKG_VERSION"))
         .about(
             "fixred is a tool to fix outdated links in text files. fixred replaces all HTTP and HTTPS \
-            URLs with their redirect ones. fixred follows redirects repeatedly and uses the last URL to \
-            replace.\n\n\
-            Filtering URLs to be fixed is supported. See descriptions of --select and --reject options.\n\n\
+            URLs with their redirect ones.\n\n\
+            fixred follows redirects repeatedly and uses the last URL to replace. The behavior can be \
+            changed by --shallow flag to resolve the first redirect only.\n\n\
+            Filtering URLs to be fixed is supported. See descriptions of --extract and --ignore options.\n\n\
             To enable verbose output, set $RUST_LOG environment variable. Setting RUST_LOG=info outputs \
             which file is being processed. Setting RUST_LOG=debug outputs what fixred is doing.\n\n\
             Visit https://github.com/rhysd/fixred#readme for more details.",
         )
         .global_setting(AppSettings::ColoredHelp)
         .arg(
-            Arg::new("select")
+            Arg::new("shallow")
                 .short('s')
-                .long("select")
-                .takes_value(true)
-                .value_name("REGEX")
-                .about("Fix URLs which are matched to this pattern."),
+                .long("shallow")
+                .about("Redirect only once when resolving a URL redirect")
         )
         .arg(
-            Arg::new("reject")
-                .short('r')
-                .long("reject")
+            Arg::new("extract")
+                .short('e')
+                .long("extract")
                 .takes_value(true)
                 .value_name("REGEX")
-                .about("Fix URLs which are NOT matched to this pattern."),
+                .about("Fix URLs which are matched to this pattern"),
+        )
+        .arg(
+            Arg::new("ignore")
+                .short('r')
+                .long("ignore")
+                .takes_value(true)
+                .value_name("REGEX")
+                .about("Fix URLs which are NOT matched to this pattern"),
         )
         .arg(
             Arg::new("PATH")
                 .about(
                     "Directory or file path to fix. When a directory path is given, all files in it \
                     are fixed recursively. When no path is given, fixred reads input from stdin and \
-                    outputs the result to stdout.",
+                    outputs the result to stdout",
                 )
                 .multiple_values(true),
         )
         .get_matches();
 
-    let red = Redirector::<CurlResolver>::default()
-        .select(matches.value_of("select").map(Regex::new).transpose()?)
-        .reject(matches.value_of("reject").map(Regex::new).transpose()?);
+    let red = CurlRedirector::default()
+        .extract(matches.value_of("extract").map(Regex::new).transpose()?)
+        .ignore(matches.value_of("ignore").map(Regex::new).transpose()?)
+        .shallow(matches.is_present("shallow"));
 
     if let Some(paths) = matches.values_of_os("PATH") {
         info!("Processing all files in given paths via command line arguments");
