@@ -12,7 +12,10 @@ use resolve::CurlResolver;
 use std::io;
 
 fn main() -> Result<()> {
-    env_logger::init();
+    env_logger::builder()
+        .format_target(false)
+        .format_timestamp(None)
+        .init();
 
     let matches = App::new("fixred")
         .version(env!("CARGO_PKG_VERSION"))

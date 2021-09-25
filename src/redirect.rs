@@ -41,19 +41,18 @@ impl<R: Resolver> Redirector<R> {
                 },
             )
             .collect::<Result<Vec<_>>>()?; // Collect to Vec to check errors before overwriting files
-        let len = replacements.len();
-        debug!("Found {} redirects", len);
-        replace_all(out, content, replacements.into_iter())?;
-        Ok(len)
+        debug!("Found {} redirects", replacements.len());
+        replace_all(out, content, &replacements)?;
+        Ok(replacements.len())
     }
 
     pub fn fix_file(&self, file: PathBuf) -> Result<()> {
         info!("Fixing redirects in {:?}", &file);
 
         let content = fs::read_to_string(&file)?;
-        let out = fs::File::create(&file)?;
-        let out = BufWriter::new(out);
-        let count = self.find_and_replace(out, &content)?;
+        let mut out = BufWriter::new(fs::File::create(&file)?);
+        let count = self.find_and_replace(&mut out, &content)?;
+        out.flush()?;
 
         info!("Fixed {} links in {:?}", count, &file);
         Ok(())
