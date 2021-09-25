@@ -13,26 +13,42 @@ use walkdir::WalkDir;
 
 #[derive(Default)]
 pub struct Redirector<R: Resolver> {
+    extract: Option<Regex>,
+    ignore: Option<Regex>,
     resolver: R,
 }
 
 impl<R: Resolver> Redirector<R> {
-    pub fn extract(mut self, r: Option<Regex>) -> Self {
-        debug!("Regex to extract URLs: {:?}", r);
-        self.resolver.extract(r);
+    pub fn extract(mut self, pattern: Option<Regex>) -> Self {
+        debug!("Regex to extract URLs: {:?}", pattern);
+        self.extract = pattern;
         self
     }
 
-    pub fn ignore(mut self, r: Option<Regex>) -> Self {
-        debug!("Regex to ignore URLs: {:?}", r);
-        self.resolver.ignore(r);
+    pub fn ignore(mut self, pattern: Option<Regex>) -> Self {
+        debug!("Regex to ignore URLs: {:?}", pattern);
+        self.ignore = pattern;
         self
     }
 
-    pub fn shallow(mut self, b: bool) -> Self {
-        debug!("Shallow redirect?: {}", b);
-        self.resolver.shallow(b);
+    pub fn shallow(mut self, enabled: bool) -> Self {
+        debug!("Shallow redirect?: {}", enabled);
+        self.resolver.shallow(enabled);
         self
+    }
+
+    fn should_resolve(&self, url: &str) -> bool {
+        if let Some(r) = &self.extract {
+            if !r.is_match(url) {
+                return false;
+            }
+        }
+        if let Some(r) = &self.ignore {
+            if r.is_match(url) {
+                return false;
+            }
+        }
+        true
     }
 
     fn find_and_replace<W: Write>(&self, out: W, content: &str) -> Result<usize> {
@@ -41,10 +57,14 @@ impl<R: Resolver> Redirector<R> {
         let replacements = spans
             .into_par_iter()
             .filter_map(|(start, end)| {
-                let u = &content[start..end];
-                match self.resolver.resolve(u) {
-                    Ok(u) => u.map(|text| Ok(Replacement { start, end, text })),
-                    Err(e) => Some(Err(e).with_context(|| format!("Resolving URL {}", u))),
+                let url = &content[start..end];
+                if !self.should_resolve(url) {
+                    debug!("Skipped URL: {}", url);
+                    return None;
+                }
+                match self.resolver.resolve(url) {
+                    Ok(url) => url.map(|text| Ok(Replacement { start, end, text })),
+                    Err(e) => Some(Err(e).with_context(|| format!("Resolving URL {}", url))),
                 }
             })
             .collect::<Result<Vec<_>>>()?; // Collect to Vec to check errors before overwriting files

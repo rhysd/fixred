@@ -2,50 +2,21 @@ use anyhow::Result;
 use chashmap::CHashMap;
 use curl::easy::Easy;
 use log::debug;
-use regex::Regex;
 
 pub trait Resolver: Default + Sync {
-    fn extract(&mut self, r: Option<Regex>);
-    fn ignore(&mut self, r: Option<Regex>);
     fn shallow(&mut self, b: bool);
     fn resolve(&self, url: &str) -> Result<Option<String>>;
 }
 
 #[derive(Default)]
 pub struct CurlResolver {
-    extract: Option<Regex>,
-    ignore: Option<Regex>,
     shallow: bool,
     cache: CHashMap<String, Option<String>>,
 }
 
-impl CurlResolver {
-    fn should_redirect(&self, url: &str) -> bool {
-        if let Some(r) = &self.extract {
-            if !r.is_match(url) {
-                return false;
-            }
-        }
-        if let Some(r) = &self.ignore {
-            if r.is_match(url) {
-                return false;
-            }
-        }
-        true
-    }
-}
-
 impl Resolver for CurlResolver {
-    fn extract(&mut self, r: Option<Regex>) {
-        self.extract = r;
-    }
-
-    fn ignore(&mut self, r: Option<Regex>) {
-        self.ignore = r;
-    }
-
-    fn shallow(&mut self, b: bool) {
-        self.shallow = b;
+    fn shallow(&mut self, enabled: bool) {
+        self.shallow = enabled;
     }
 
     fn resolve(&self, url: &str) -> Result<Option<String>> {
@@ -54,12 +25,6 @@ impl Resolver for CurlResolver {
         if let Some(u) = self.cache.get(url) {
             debug!("Cache hit: {} -> {:?}", url, *u);
             return Ok(u.clone());
-        }
-
-        if !self.should_redirect(url) {
-            debug!("Skipped URL: {}", url);
-            self.cache.insert(url.to_string(), None);
-            return Ok(None);
         }
 
         debug!("Sending HEAD request to {}", url);
