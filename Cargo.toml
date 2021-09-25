@@ -18,7 +18,7 @@ maintenance = { status = "actively-developed" }
 aho-corasick = "0.7"
 anyhow = "1"
 chashmap = "2"
-clap = { version = "3.0.0-beta", default-features = false, features = ["std", "cargo", "color", "suggestions", "unicode_help"] }
+clap = { version = "3.0.0-beta", default-features = false, features = ["std", "color", "suggestions"] }
 curl = "0.4"
 env_logger = { version = "0.9", default-features = false, features = ["termcolor", "atty", "humantime"] }
 log = "0.4"
