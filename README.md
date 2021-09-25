@@ -72,7 +72,12 @@ example fixes URLs which starts with `https://github.com/` using `--extract` opt
 fixred --extract '^https://github\.com/' ./docs
 ```
 
-`--ignore` option is an invert version of `--extract`. URLs matched to the pattern are ignored.
+`--ignore` option is an invert version of `--extract`. URLs matched to the pattern are ignored. The following example
+avoids to resolve URLs which contain hashes.
+
+```sh
+fixred --ignore '#' ./docs
+```
 
 ### Verbose logs
 

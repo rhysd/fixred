@@ -27,7 +27,7 @@ fn main() -> Result<()> {
             Filtering URLs to be fixed is supported. See descriptions of --extract and --ignore options.\n\n\
             To enable verbose output, set $RUST_LOG environment variable. Setting RUST_LOG=info outputs \
             which file is being processed. Setting RUST_LOG=debug outputs what fixred is doing.\n\n\
-            Visit https://github.com/rhysd/fixred#readme for more details.",
+            Visit https://github.com/rhysd/fixred#usage for more details with several examples.",
         )
         .global_setting(AppSettings::ColoredHelp)
         .arg(
