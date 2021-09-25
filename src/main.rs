@@ -3,7 +3,7 @@ pub mod replace;
 pub mod resolve;
 pub mod url;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{App, AppSettings, Arg};
 use log::info;
 use redirect::CurlRedirector;
@@ -75,7 +75,9 @@ fn main() -> Result<()> {
         info!("Fixing redirects in stdin");
         let stdin = io::stdin();
         let stdout = io::stdout();
-        let count = red.fix(stdin.lock(), stdout.lock())?;
+        let count = red
+            .fix(stdin.lock(), stdout.lock())
+            .context("While processing stdin")?;
         info!("Fixed {} links in stdin", count);
     }
 

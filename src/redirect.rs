@@ -1,14 +1,14 @@
 use crate::replace::{replace_all, Replacement};
 use crate::resolve::{CurlResolver, Resolver};
 use crate::url::UrlFinder;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use log::{debug, info};
 use rayon::prelude::*;
 use regex::Regex;
 use std::ffi::OsStr;
 use std::fs;
 use std::io::{BufWriter, Read, Write};
-use std::path::PathBuf;
+use std::path::Path;
 use walkdir::WalkDir;
 
 #[derive(Default)]
@@ -40,19 +40,20 @@ impl<R: Resolver> Redirector<R> {
         debug!("Found {} links", spans.len());
         let replacements = spans
             .into_par_iter()
-            .filter_map(
-                |(start, end)| match self.resolver.resolve(&content[start..end]) {
+            .filter_map(|(start, end)| {
+                let u = &content[start..end];
+                match self.resolver.resolve(u) {
                     Ok(u) => u.map(|text| Ok(Replacement { start, end, text })),
-                    Err(e) => Some(Err(e)),
-                },
-            )
+                    Err(e) => Some(Err(e).with_context(|| format!("Resolving URL {}", u))),
+                }
+            })
             .collect::<Result<Vec<_>>>()?; // Collect to Vec to check errors before overwriting files
         debug!("Found {} redirects", replacements.len());
         replace_all(out, content, &replacements)?;
         Ok(replacements.len())
     }
 
-    pub fn fix_file(&self, file: PathBuf) -> Result<()> {
+    pub fn fix_file(&self, file: &Path) -> Result<()> {
         info!("Fixing redirects in {:?}", &file);
 
         let content = fs::read_to_string(&file)?;
@@ -67,11 +68,20 @@ impl<R: Resolver> Redirector<R> {
     pub fn fix_all_files<'a>(&self, paths: impl Iterator<Item = &'a OsStr>) -> Result<usize> {
         let count = paths
             .flat_map(WalkDir::new)
-            .filter(|e| match e {
-                Ok(e) => e.metadata().map(|m| m.is_file()).unwrap_or(false),
-                Err(_) => true,
+            .filter_map(|entry| match entry {
+                Ok(entry) => match entry.metadata() {
+                    Ok(m) if m.is_file() => Some(Ok(entry)),
+                    Ok(_) => None,
+                    Err(err) => Some(Err(err)),
+                },
+                Err(err) => Some(Err(err)),
             })
-            .try_fold(0, |c, e| self.fix_file(e?.into_path()).map(|_| c + 1))?;
+            .try_fold(0, |count, entry| {
+                let path = entry?.into_path();
+                self.fix_file(&path)
+                    .map(|_| count + 1)
+                    .with_context(|| format!("While processing {:?}", &path))
+            })?;
         Ok(count)
     }
 
