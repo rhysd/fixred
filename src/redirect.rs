@@ -62,10 +62,8 @@ impl<R: Resolver> Redirector<R> {
                     debug!("Skipped URL: {}", url);
                     return None;
                 }
-                match self.resolver.resolve(url) {
-                    Ok(url) => url.map(|text| Ok(Replacement { start, end, text })),
-                    Err(e) => Some(Err(e).with_context(|| format!("Resolving URL {}", url))),
-                }
+                let url = self.resolver.resolve(url);
+                url.map(|text| Ok(Replacement { start, end, text }))
             })
             .collect::<Result<Vec<_>>>()?; // Collect to Vec to check errors before overwriting files
         debug!("Found {} redirects", replacements.len());

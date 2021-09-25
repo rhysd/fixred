@@ -1,11 +1,11 @@
 use anyhow::Result;
 use chashmap::CHashMap;
 use curl::easy::Easy;
-use log::debug;
+use log::{debug, warn};
 
 pub trait Resolver: Default + Sync {
     fn shallow(&mut self, b: bool);
-    fn resolve(&self, url: &str) -> Result<Option<String>>;
+    fn resolve(&self, url: &str) -> Option<String>;
 }
 
 #[derive(Default)]
@@ -14,12 +14,8 @@ pub struct CurlResolver {
     cache: CHashMap<String, Option<String>>,
 }
 
-impl Resolver for CurlResolver {
-    fn shallow(&mut self, enabled: bool) {
-        self.shallow = enabled;
-    }
-
-    fn resolve(&self, url: &str) -> Result<Option<String>> {
+impl CurlResolver {
+    fn resolve_impl(&self, url: &str) -> Result<Option<String>> {
         debug!("Resolving {}", url);
 
         if let Some(u) = self.cache.get(url) {
@@ -43,5 +39,22 @@ impl Resolver for CurlResolver {
         debug!("Resolved redirect: {} -> {:?}", url, red);
         self.cache.insert(url.to_string(), red.clone());
         Ok(red)
+    }
+}
+
+impl Resolver for CurlResolver {
+    fn shallow(&mut self, enabled: bool) {
+        self.shallow = enabled;
+    }
+
+    fn resolve(&self, url: &str) -> Option<String> {
+        // Do not return error on resolving URLs because it is normal case that broken URL is passed to this function.
+        match self.resolve_impl(url) {
+            Ok(ret) => ret,
+            Err(err) => {
+                warn!("Could not resolve {:?}: {}", url, err);
+                None
+            }
+        }
     }
 }

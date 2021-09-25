@@ -14,6 +14,7 @@ cargo install fixred
 ## Usage
 
 fixred checks redirects of URLs in text files. When a URL is redirected, fixred replaces it with the redirected one.
+fixred ignores invalid URLs or broken links (e.g. 404) to avoid false positives in extracted URLs.
 
 See the help output for each flags, options, and arguments.
 

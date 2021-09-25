@@ -20,7 +20,8 @@ fn main() -> Result<()> {
         .version(env!("CARGO_PKG_VERSION"))
         .about(
             "fixred is a tool to fix outdated links in text files. fixred replaces all HTTP and HTTPS \
-            URLs with their redirect ones.\n\n\
+            URLs with their redirect ones. fixred ignores invalid URLs or broken links to avoid false \
+            positives on extracting URLs in text files.\n\n\
             fixred follows redirects repeatedly and uses the last URL to replace. The behavior can be \
             changed by --shallow flag to resolve the first redirect only.\n\n\
             Filtering URLs to be fixed is supported. See descriptions of --extract and --ignore options.\n\n\
