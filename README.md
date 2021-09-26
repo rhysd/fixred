@@ -1,8 +1,11 @@
 fixred
 ======
+[![crate][crates-io-badge]][crates-io]
 [![CI][ci-badge]][ci]
 
 [fixred][repo] is a command line utility to fix outdated links in files with redirect URLs.
+
+<img src="https://github.com/rhysd/ss/raw/master/fixred/main.gif" alt="demo" width="590" height="396" />
 
 ## Installation
 
@@ -102,3 +105,5 @@ Distributed under [the MIT license](./LICENSE.txt).
 [libcurl]: https://curl.se/libcurl/
 [ci]: https://github.com/rhysd/fixred/actions/workflows/ci.yaml
 [ci-badge]: https://github.com/rhysd/fixred/actions/workflows/ci.yaml/badge.svg
+[crates-io]: https://crates.io/crates/fixred
+[crates-io-badge]: https://img.shields.io/crates/v/fixred.svg
