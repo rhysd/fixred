@@ -15,7 +15,7 @@ pub struct CurlResolver {
 }
 
 impl CurlResolver {
-    fn resolve_impl(&self, url: &str) -> Result<Option<String>> {
+    fn try_resolve(&self, url: &str) -> Result<Option<String>> {
         debug!("Resolving {}", url);
 
         if let Some(u) = self.cache.get(url) {
@@ -49,12 +49,68 @@ impl Resolver for CurlResolver {
 
     fn resolve(&self, url: &str) -> Option<String> {
         // Do not return error on resolving URLs because it is normal case that broken URL is passed to this function.
-        match self.resolve_impl(url) {
+        match self.try_resolve(url) {
             Ok(ret) => ret,
             Err(err) => {
                 warn!("Could not resolve {:?}: {}", url, err);
                 None
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn resolve_url_with_cache() {
+        // Redirect: github.com/rhysd/ -> github.com/vim-crystal/ -> raw.githubusercontent
+        let url = "https://github.com/rhysd/vim-crystal/raw/master/README.md";
+
+        let res = CurlResolver::default();
+        let resolved = res.try_resolve(url).unwrap();
+        let resolved = resolved.unwrap();
+        assert!(
+            resolved.starts_with("https://raw.githubusercontent.com/vim-crystal/"),
+            "URL: {}",
+            resolved
+        );
+
+        assert_eq!(*res.cache.get(url).unwrap(), Some(resolved.clone()));
+
+        let cached = res.try_resolve(url).unwrap();
+        assert_eq!(resolved, cached.unwrap());
+    }
+
+    #[test]
+    fn resolve_shallow_redirect() {
+        // Redirect: github.com/rhysd/ -> github.com/vim-crystal/ -> raw.githubusercontent
+        let url = "https://github.com/rhysd/vim-crystal/raw/master/README.md";
+
+        let mut res = CurlResolver::default();
+        res.shallow(true);
+        let resolved = res.try_resolve(url).unwrap();
+        let resolved = resolved.unwrap();
+        assert!(
+            resolved.starts_with("https://github.com/vim-crystal/vim-crystal/"),
+            "URL: {}",
+            resolved
+        );
+    }
+
+    #[test]
+    fn resolve_url_not_found() {
+        // Redirect: github.com/rhysd/ -> github.com/vim-crystal/ -> raw.githubusercontent
+        let url = "https://github.com/rhysd/this-repo-does-not-exist";
+
+        let res = CurlResolver::default();
+        let resolved = res.resolve(url);
+        assert_eq!(resolved, None);
+
+        assert_eq!(*res.cache.get(url).unwrap(), None);
+
+        let cached = res.resolve(url);
+        assert_eq!(resolved, cached);
     }
 }

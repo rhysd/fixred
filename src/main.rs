@@ -3,6 +3,9 @@ pub mod replace;
 pub mod resolve;
 pub mod url;
 
+#[cfg(test)]
+mod test_helper;
+
 use anyhow::{Context, Result};
 use clap::{App, AppSettings, Arg};
 use log::info;
