@@ -1,13 +1,20 @@
 [package]
 name = "fixred"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2018"
 authors = ["rhysd <lin90162@yahoo.co.jp>"]
-description = "Command line tool to fix HTTP URL links in files to the redirected links"
+description = "Command line tool to fix outdated URLs in files with redirected ones"
 license = "MIT"
 homepage = "https://github.com/rhysd/fixred#readme"
 repository = "https://github.com/rhysd/fixred"
 readme = "README.md"
+include = [
+    "/src",
+    "/LICENSE.txt",
+    "/README.md",
+]
+categories = ["command-line-utilities"]
+keywords = ["tool", "fixer", "outdated-links"]
 
 [badges]
 maintenance = { status = "actively-developed" }
