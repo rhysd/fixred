@@ -1,5 +1,6 @@
 fixred
 ======
+[![CI][ci-badge]][ci]
 
 [fixred][repo] is a command line utility to fix outdated links in files with redirect URLs.
 
@@ -99,3 +100,5 @@ Distributed under [the MIT license](./LICENSE.txt).
 [repo]: https://github.com/rhysd/fixred
 [cargo]: https://doc.rust-lang.org/cargo/
 [libcurl]: https://curl.se/libcurl/
+[ci]: https://github.com/rhysd/fixred/actions/workflows/ci.yaml
+[ci-badge]: https://github.com/rhysd/fixred/actions/workflows/ci.yaml/badge.svg
