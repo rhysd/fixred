@@ -2,6 +2,7 @@ use anyhow::Result;
 use chashmap::CHashMap;
 use curl::easy::Easy;
 use log::{debug, warn};
+use url::Url;
 
 pub trait Resolver: Default + Sync {
     fn shallow(&mut self, b: bool);
@@ -23,6 +24,8 @@ impl CurlResolver {
             return Ok(u.clone());
         }
 
+        let parsed = Url::parse(url)?;
+
         debug!("Sending HEAD request to {}", url);
         let mut curl = Easy::new();
         curl.nobody(true)?;
@@ -35,7 +38,15 @@ impl CurlResolver {
             curl.perform()?;
             curl.effective_url()?
         };
-        let red = resolved.and_then(|u| (u != url).then(|| u.to_string()));
+        let red = resolved.and_then(|u| {
+            (u != url).then(|| {
+                if let Some(fragment) = parsed.fragment() {
+                    format!("{}#{}", u, fragment)
+                } else {
+                    u.to_string()
+                }
+            })
+        });
         debug!("Resolved redirect: {} -> {:?}", url, red);
         self.cache.insert(url.to_string(), red.clone());
         Ok(red)
@@ -112,5 +123,22 @@ mod tests {
 
         let cached = res.resolve(url);
         assert_eq!(resolved, cached);
+    }
+
+    #[test]
+    fn resolve_url_with_fragment() {
+        // Redirect: github.com/rhysd/ -> github.com/vim-crystal
+        let url = "https://github.com/rhysd/vim-crystal#readme";
+
+        let res = CurlResolver::default();
+        let resolved = res.resolve(url).unwrap();
+        assert!(resolved.ends_with("#readme"), "URL: {}", resolved);
+    }
+
+    #[test]
+    fn url_parse_error() {
+        let res = CurlResolver::default();
+        let resolved = res.try_resolve("https://");
+        assert!(resolved.is_err(), "{:?}", resolved);
     }
 }

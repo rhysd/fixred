@@ -31,7 +31,5 @@ env_logger = { version = "0.9", default-features = false, features = ["termcolor
 log = "0.4"
 rayon = "1"
 regex = "1"
+url = { version = "2", default-features = false, features = [] }
 walkdir = "2"
-
-[features]
-default = []
