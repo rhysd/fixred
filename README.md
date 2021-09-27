@@ -96,6 +96,12 @@ RUST_LOG=info fixred ./docs
 RUST_LOG=debug fixred ./docs
 ```
 
+### Real-world example
+
+https://github.com/rhysd/actionlint/commit/0b7375279d2caf63203701eccc39ab091cc83a50
+
+Here is an example of usage in [actionlint][] project.
+
 ## License
 
 Distributed under [the MIT license](./LICENSE.txt).
@@ -107,3 +113,4 @@ Distributed under [the MIT license](./LICENSE.txt).
 [ci-badge]: https://github.com/rhysd/fixred/actions/workflows/ci.yaml/badge.svg
 [crates-io]: https://crates.io/crates/fixred
 [crates-io-badge]: https://img.shields.io/crates/v/fixred.svg
+[actionlint]: https://github.com/rhysd/actionlint
