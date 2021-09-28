@@ -43,3 +43,23 @@ jobs:
         with:
           command: fmt
           args: -- --check --color always
+  docker:
+    name: Dockerfile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        id: image
+        uses: docker/build-push-action@v2
+        with:
+          push: false
+      - name: Test Docker image
+        run: |
+          want="https://github.com/rhysd/vim-crystal"
+          have="$(echo "https://github.com/rhysd/vim-crystal" | docker run -i --rm ${{ steps.image.outputs.digest }})"
+          if [[ "$have" != "$want" ]]; then
+            echo "expected ${want} but got ${have}" >&2
+            exit 1
+          fi
+      - name: Lint Dockerfile with hadolint
+        run: docker run --rm -i hadolint/hadolint hadolint --ignore DL3007 --ignore DL3008 --strict-labels - < Dockerfile
