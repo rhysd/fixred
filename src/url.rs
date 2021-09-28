@@ -7,15 +7,16 @@ enum Char {
 }
 
 // https://datatracker.ietf.org/doc/html/rfc3986#section-2
-// > unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
-// > reserved    = gen-delims / sub-delims
-// > gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
-// > sub-delims  = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+// > unreserved   = ALPHA / DIGIT / "-" / "." / "_" / "~"
+// > reserved     = gen-delims / sub-delims
+// > gen-delims   = ":" / "/" / "?" / "#" / "[" / "]" / "@"
+// > sub-delims   = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+// > pct-encoded = "%" HEXDIG HEXDIG
 fn url_char_kind(c: char) -> Char {
     match c {
         c if c.is_alphanumeric() => Char::Term,
         '.' | ':' | '?' | '#' | '[' | ']' | '@' | '!' | '$' | '&' | '\'' | '(' | ')' | '*'
-        | '+' | ',' | ';' => Char::NonTerm,
+        | '+' | ',' | ';' | '%' => Char::NonTerm,
         '-' | '_' | '~' | '/' | '=' => Char::Term,
         _ => Char::Invalid,
     }
@@ -100,6 +101,14 @@ mod tests {
         let s = "the GitHub URL is https://github.com/, check it out";
         let (b, e) = find_all_urls(s)[0];
         assert_eq!(&s[b..e], "https://github.com/");
+    }
+
+    #[test]
+    fn percent_encoding() {
+        let s = "https://example.com/?foo=%E3%81%82%E3%81%84%E3%81%86%E3%81%88%E3%81%8A&bar=true";
+        let t = format!("see the URL {} for more details", s);
+        let (b, e) = find_all_urls(&t)[0];
+        assert_eq!(&t[b..e], s);
     }
 
     #[test]
