@@ -8,17 +8,23 @@ mod test_helper;
 
 use anyhow::{Context, Result};
 use clap::{App, AppSettings, Arg};
-use log::info;
+use log::{debug, info, log_enabled, Level, LevelFilter};
 use redirect::CurlRedirector;
 use regex::Regex;
+use std::env;
 use std::io;
+use std::time;
+
+fn build_logger(verbose: bool) -> env_logger::Builder {
+    let mut builder = env_logger::Builder::from_env("FIXRED_LOG");
+    builder.format_target(false).format_timestamp(None);
+    if verbose && env::var_os("FIXRED_LOG").is_none() {
+        builder.filter_level(LevelFilter::Info);
+    }
+    builder
+}
 
 fn main() -> Result<()> {
-    env_logger::builder()
-        .format_target(false)
-        .format_timestamp(None)
-        .init();
-
     let matches = App::new("fixred")
         .version(env!("CARGO_PKG_VERSION"))
         .about(
@@ -28,8 +34,9 @@ fn main() -> Result<()> {
             fixred follows redirects repeatedly and uses the last URL to replace. The behavior can be \
             changed by --shallow flag to resolve the first redirect only.\n\n\
             Filtering URLs to be fixed is supported. See descriptions of --extract and --ignore options.\n\n\
-            To enable verbose output, set $RUST_LOG environment variable. Setting RUST_LOG=info outputs \
-            which file is being processed. Setting RUST_LOG=debug outputs what fixred is doing.\n\n\
+            To enable verbose output, use --verbose flag or set $FIXRED_LOG environment variable. \
+            Setting --verbose or FIXRED_LOG=info outputs which file is being processed. Setting \
+            FIXRED_LOG=debug outputs what fixred is doing.\n\n\
             Visit https://github.com/rhysd/fixred#usage for more details with several examples.",
         )
         .global_setting(AppSettings::ColoredHelp)
@@ -64,7 +71,17 @@ fn main() -> Result<()> {
                 )
                 .multiple_values(true),
         )
+        .arg(
+            Arg::new("verbose")
+                .short('v')
+                .long("verbose")
+                .about("Output verbose log. This is the same as setting \"info\" to $FIXRED_LOG environment variable")
+        )
         .get_matches();
+
+    build_logger(matches.is_present("verbose")).init();
+
+    let start = log_enabled!(Level::Debug).then(time::Instant::now);
 
     let red = CurlRedirector::default()
         .extract(matches.value_of("extract").map(Regex::new).transpose()?)
@@ -83,6 +100,11 @@ fn main() -> Result<()> {
             .fix(stdin.lock(), stdout.lock())
             .context("While processing stdin")?;
         info!("Fixed {} links in stdin", count);
+    }
+
+    if let Some(start) = start {
+        let secs = time::Instant::now().duration_since(start).as_secs_f32();
+        debug!("Elapsed: {} seconds", secs);
     }
 
     Ok(())

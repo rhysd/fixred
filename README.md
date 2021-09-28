@@ -55,7 +55,7 @@ Mount local directories with `-v` and pass an environment variable (if necessary
 
 ```sh
 # Fix all files in ./docs
-docker run -it --rm -v $(pwd):/app -e RUST_LOG=info rhysd/fixred:latest /app/docs
+docker run -it --rm -v $(pwd):/app -e FIXRED_LOG=info rhysd/fixred:latest /app/docs
 ```
 
 Passing the input via stdin is also possible. The result is output to stdout.
@@ -109,15 +109,17 @@ fixred --ignore '#' ./docs
 
 ### Verbose logs
 
-By default, fixred outputs nothing when it runs successfully. For verbose log outputs, `$RUST_LOG` environment variable
-is available.
+By default, fixred outputs nothing when it runs successfully. For verbose log outputs, `--verbose` flag or `$FIXRED_LOG`i
+environment variable is available.
 
 ```sh
 # Outputs which file is being processed
-RUST_LOG=info fixred ./docs
+fixred --verbose
+# Or
+FIXRED_LOG=info fixred ./docs
 
 # Outputs what fixred is doing in detail
-RUST_LOG=debug fixred ./docs
+FIXRED_LOG=debug fixred ./docs
 ```
 
 ### Real-world example
