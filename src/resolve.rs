@@ -2,7 +2,6 @@ use anyhow::Result;
 use chashmap::CHashMap;
 use curl::easy::Easy;
 use log::{debug, warn};
-use url::Url;
 
 pub trait Resolver: Default + Sync {
     fn shallow(&mut self, b: bool);
@@ -24,7 +23,8 @@ impl CurlResolver {
             return Ok(u.clone());
         }
 
-        let parsed = Url::parse(url)?;
+        // https://datatracker.ietf.org/doc/html/rfc3986#section-3
+        let fragment = url.find('#').map(|i| &url[i + 1..]);
 
         debug!("Sending HEAD request to {}", url);
         let mut curl = Easy::new();
@@ -40,7 +40,7 @@ impl CurlResolver {
         };
         let red = resolved.and_then(|u| {
             (u != url).then(|| {
-                if let Some(fragment) = parsed.fragment() {
+                if let Some(fragment) = fragment {
                     format!("{}#{}", u, fragment)
                 } else {
                     u.to_string()
@@ -132,7 +132,11 @@ mod tests {
 
         let res = CurlResolver::default();
         let resolved = res.resolve(url).unwrap();
-        assert!(resolved.ends_with("#readme"), "URL: {}", resolved);
+        assert!(
+            resolved.ends_with("/vim-crystal#readme"),
+            "URL: {}",
+            resolved
+        );
     }
 
     #[test]
