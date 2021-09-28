@@ -13,6 +13,13 @@ fixred is installed via [cargo][] package manager. [libcurl][] is necessary as d
 
 ```sh
 cargo install fixred
+fixred --help
+```
+
+If you don't have Rust toolchain, [a Docker image][docker] is also available.
+
+```sh
+docker run -it --rm rhysd/fixred:latest --help
 ```
 
 ## Usage
@@ -39,6 +46,16 @@ fixred ./docs
 
 # Multiple paths can be passed
 fixred ./README.md ./CONTRIBUTING.md ./docs
+```
+
+### Fix files via Docker
+
+Mount local directories with `-v` and pass an environment variable (if necessary) with `-e`. Running
+[the Docker image][docker] executes `fixred` executable by default.
+
+```sh
+# Fix all files in ./docs
+docker run -it --rm -v $(pwd):/app -e RUST_LOG=info rhysd/fixred:latest /app/docs
 ```
 
 ### Fix stdin
@@ -114,3 +131,4 @@ Distributed under [the MIT license](./LICENSE.txt).
 [crates-io]: https://crates.io/crates/fixred
 [crates-io-badge]: https://img.shields.io/crates/v/fixred.svg
 [actionlint]: https://github.com/rhysd/actionlint
+[docker]: https://hub.docker.com/r/rhysd/fixred
