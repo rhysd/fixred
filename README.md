@@ -48,7 +48,7 @@ fixred ./docs
 fixred ./README.md ./CONTRIBUTING.md ./docs
 ```
 
-### Fix files via Docker
+### Run via Docker container
 
 Mount local directories with `-v` and pass an environment variable (if necessary) with `-e`. Running
 [the Docker image][docker] executes `fixred` executable by default.
@@ -56,6 +56,13 @@ Mount local directories with `-v` and pass an environment variable (if necessary
 ```sh
 # Fix all files in ./docs
 docker run -it --rm -v $(pwd):/app -e RUST_LOG=info rhysd/fixred:latest /app/docs
+```
+
+Passing the input via stdin is also possible. The result is output to stdout.
+
+```sh
+# Fix stdin and output the result to stdout
+cat ./docs/usage.md | docker run -i --rm rhysd/fixred:latest
 ```
 
 ### Fix stdin
