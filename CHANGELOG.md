@@ -1,3 +1,22 @@
+<a name="v1.1.0"></a>
+# [v1.1.0](https://github.com/rhysd/fixred/releases/tag/v1.1.0) - 28 Sep 2021
+
+- Release [the docker image](https://hub.docker.com/r/rhysd/fixred).
+- Use a dedicated `$FIXRED_LOG` environment variable instead of `$RUST_LOG` environment variable to control logs.
+- Add `--verbose` flag to show info level logs easily.
+
+[Changes][v1.1.0]
+
+
+<a name="v1.0.2"></a>
+# [v1.0.2](https://github.com/rhysd/fixred/releases/tag/v1.0.2) - 28 Sep 2021
+
+- Fix percent-encoded characters are ignored
+- Reduce number of dependencies from 86 to 77
+
+[Changes][v1.0.2]
+
+
 <a name="v1.0.1"></a>
 # [v1.0.1](https://github.com/rhysd/fixred/releases/tag/v1.0.1) - 27 Sep 2021
 
@@ -16,6 +35,8 @@ See the document to know how to install fixred: https://github.com/rhysd/fixred#
 [Changes][v1.0.0]
 
 
+[v1.1.0]: https://github.com/rhysd/fixred/compare/v1.0.2...v1.1.0
+[v1.0.2]: https://github.com/rhysd/fixred/compare/v1.0.1...v1.0.2
 [v1.0.1]: https://github.com/rhysd/fixred/compare/v1.0.0...v1.0.1
 [v1.0.0]: https://github.com/rhysd/fixred/tree/v1.0.0
 
