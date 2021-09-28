@@ -48,6 +48,14 @@ fixred ./docs
 fixred ./README.md ./CONTRIBUTING.md ./docs
 ```
 
+### Fix stdin
+
+When no argument is given, fixred reads stdin and outputs result to stdout.
+
+```sh
+cat ./docs/usage.md | fixred
+```
+
 ### Run via Docker container
 
 Mount local directories with `-v` and pass an environment variable (if necessary) with `-e`. Running
@@ -63,14 +71,6 @@ Passing the input via stdin is also possible. The result is output to stdout.
 ```sh
 # Fix stdin and output the result to stdout
 cat ./docs/usage.md | docker run -i --rm rhysd/fixred:latest
-```
-
-### Fix stdin
-
-When no argument is given, fixred reads stdin and outputs result to stdout.
-
-```sh
-cat ./docs/usage.md | fixred
 ```
 
 ### Redirect only once
@@ -124,7 +124,8 @@ FIXRED_LOG=debug fixred ./docs
 
 ### Real-world example
 
-https://github.com/rhysd/actionlint/commit/0b7375279d2caf63203701eccc39ab091cc83a50
+- https://github.com/rhysd/actionlint/commit/0b7375279d2caf63203701eccc39ab091cc83a50
+- https://github.com/rhysd/actionlint/commit/a3f270b313affa81cc41709587cbd2588d4ac4ce
 
 Here is an example of usage in [actionlint][] project.
 
