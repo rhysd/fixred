@@ -172,7 +172,7 @@ dependencies = [
 
 [[package]]
 name = "fixred"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "aho-corasick",
  "anyhow",

@@ -1,6 +1,6 @@
 [package]
 name = "fixred"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2018"
 authors = ["rhysd <lin90162@yahoo.co.jp>"]
 description = "Command line tool to fix outdated URLs in files with redirected ones"
