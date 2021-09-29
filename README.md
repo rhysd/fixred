@@ -129,6 +129,30 @@ FIXRED_LOG=debug fixred ./docs
 
 Here is an example of usage in [actionlint][] project.
 
+## Use this tool as Rust library
+
+Please see [the API document][api]. And for the real world example, please see [src](./src) directory.
+
+To install as dependency, add `fixred` to your `Cargo.toml` file.
+
+```toml
+[dependencies]
+fixred = "1"
+```
+
+Here is a small example code
+
+```rust
+use fixred::resolve::CurlResolver;
+use fixred::redirect::Redirector;
+
+fn main() {
+    let red = Redirector::<CurlResolver>::default();
+    let fixed = red.fix(std::io::stdin(), std::io::stdout()).unwrap();
+    eprintln!("Fixed {} link(s)", fixed);
+}
+```
+
 ## License
 
 Distributed under [the MIT license](./LICENSE.txt).
@@ -142,3 +166,4 @@ Distributed under [the MIT license](./LICENSE.txt).
 [crates-io-badge]: https://img.shields.io/crates/v/fixred.svg
 [actionlint]: https://github.com/rhysd/actionlint
 [docker]: https://hub.docker.com/r/rhysd/fixred
+[api]: https://docs.rs/crate/fixred

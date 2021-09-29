@@ -1,15 +1,7 @@
-pub mod redirect;
-pub mod replace;
-pub mod resolve;
-pub mod url;
-
-#[cfg(test)]
-mod test_helper;
-
 use anyhow::{Context, Result};
 use clap::{App, AppSettings, Arg};
+use fixred::redirect::CurlRedirector;
 use log::{debug, info, log_enabled, Level, LevelFilter};
-use redirect::CurlRedirector;
 use regex::Regex;
 use std::env;
 use std::io;

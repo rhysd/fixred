@@ -17,7 +17,10 @@ categories = ["command-line-utilities"]
 keywords = ["tool", "fixer", "outdated-links"]
 
 [badges]
-maintenance = { status = "actively-developed" }
+maintenance = { status = "passively-maintained" }
+
+[[bin]]
+name = "fixred"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
