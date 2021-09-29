@@ -1,3 +1,16 @@
+<a name="v1.1.2"></a>
+# [v1.1.2](https://github.com/rhysd/fixred/releases/tag/v1.1.2) - 29 Sep 2021
+
+- Dependencies necessary only for building `fixred` executable are now optional. By removing `executable` feature, they can be omit on installing this tool as Rust library for less dependencies.
+  ```toml
+  [dependencies]
+  fixred = { version = "1", default-features = false, features = [] }
+  ```
+- Add an introduction dedicated for [the API document](https://docs.rs/crate/fixred). Previously `README.md` file at root of this repository was used but it is basically for `fixred` executable.
+
+[Changes][v1.1.2]
+
+
 <a name="v1.1.1"></a>
 # [v1.1.1](https://github.com/rhysd/fixred/releases/tag/v1.1.1) - 29 Sep 2021
 
@@ -43,6 +56,7 @@ See the document to know how to install fixred: https://github.com/rhysd/fixred#
 [Changes][v1.0.0]
 
 
+[v1.1.2]: https://github.com/rhysd/fixred/compare/v1.1.1...v1.1.2
 [v1.1.1]: https://github.com/rhysd/fixred/compare/v1.1.0...v1.1.1
 [v1.1.0]: https://github.com/rhysd/fixred/compare/v1.0.2...v1.1.0
 [v1.0.2]: https://github.com/rhysd/fixred/compare/v1.0.1...v1.0.2
