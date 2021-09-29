@@ -1,3 +1,11 @@
+<a name="v1.1.1"></a>
+# [v1.1.1](https://github.com/rhysd/fixred/releases/tag/v1.1.1) - 29 Sep 2021
+
+- Now fixred is available as Rust library. See [the API document](https://docs.rs/crate/fixred)
+
+[Changes][v1.1.1]
+
+
 <a name="v1.1.0"></a>
 # [v1.1.0](https://github.com/rhysd/fixred/releases/tag/v1.1.0) - 28 Sep 2021
 
@@ -35,6 +43,7 @@ See the document to know how to install fixred: https://github.com/rhysd/fixred#
 [Changes][v1.0.0]
 
 
+[v1.1.1]: https://github.com/rhysd/fixred/compare/v1.1.0...v1.1.1
 [v1.1.0]: https://github.com/rhysd/fixred/compare/v1.0.2...v1.1.0
 [v1.0.2]: https://github.com/rhysd/fixred/compare/v1.0.1...v1.0.2
 [v1.0.1]: https://github.com/rhysd/fixred/compare/v1.0.0...v1.0.1
