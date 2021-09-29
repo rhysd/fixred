@@ -21,6 +21,8 @@ maintenance = { status = "passively-maintained" }
 
 [[bin]]
 name = "fixred"
+path = "src/main.rs"
+required-features = ["executable"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -28,10 +30,14 @@ name = "fixred"
 aho-corasick = "0.7"
 anyhow = "1"
 chashmap = "2"
-clap = { version = "3.0.0-beta", default-features = false, features = ["std", "color", "suggestions"] }
+clap = { version = "3.0.0-beta", default-features = false, features = ["std", "color", "suggestions"], optional = true }
 curl = "0.4"
-env_logger = { version = "0.9", default-features = false, features = ["termcolor", "atty", "humantime"] }
+env_logger = { version = "0.9", default-features = false, features = ["termcolor", "atty", "humantime"], optional = true }
 log = "0.4"
 rayon = "1"
 regex = "1"
 walkdir = "2"
+
+[features]
+executable = ["clap", "env_logger"]
+default = ["executable"]

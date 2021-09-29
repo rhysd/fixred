@@ -133,11 +133,12 @@ Here is an example of usage in [actionlint][] project.
 
 Please see [the API document][api]. And for the real world example, please see [src](./src) directory.
 
-To install as dependency, add `fixred` to your `Cargo.toml` file.
+To install as dependency, add `fixred` to your `Cargo.toml` file. Ensure to disable default features.
+It removes all unnecessary dependencies for using this tool as library.
 
 ```toml
 [dependencies]
-fixred = "1"
+fixred = { version = "1", default-features = false, features = [] }
 ```
 
 Here is a small example code
