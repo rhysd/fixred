@@ -21,6 +21,7 @@ jobs:
         with:
           command: test
           args: --color always
+      - run: cargo run -- --help
   lint:
     name: Rustfmt and Clippy
     runs-on: ubuntu-latest
