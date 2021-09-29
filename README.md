@@ -167,4 +167,4 @@ Distributed under [the MIT license](./LICENSE.txt).
 [crates-io-badge]: https://img.shields.io/crates/v/fixred.svg
 [actionlint]: https://github.com/rhysd/actionlint
 [docker]: https://hub.docker.com/r/rhysd/fixred
-[api]: https://docs.rs/crate/fixred
+[api]: https://docs.rs/fixred
