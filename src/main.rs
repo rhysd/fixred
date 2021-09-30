@@ -29,6 +29,7 @@ fn main() -> Result<()> {
             To enable verbose output, use --verbose flag or set $FIXRED_LOG environment variable. \
             Setting --verbose or FIXRED_LOG=info outputs which file is being processed. Setting \
             FIXRED_LOG=debug outputs what fixred is doing.\n\n\
+            Note that fixred only handles UTF8 files. Non-UTF8 files are ignored.\n\n\
             Visit https://github.com/rhysd/fixred#usage for more details with several examples.",
         )
         .global_setting(AppSettings::ColoredHelp)

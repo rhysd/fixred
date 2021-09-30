@@ -48,6 +48,9 @@ fixred ./docs
 fixred ./README.md ./CONTRIBUTING.md ./docs
 ```
 
+Note that fixred only handles UTF8 files. Non-UTF8 files are ignored. To know which files were ignored, try `--verbose`
+flag.
+
 ### Fix stdin
 
 When no argument is given, fixred reads stdin and outputs result to stdout.

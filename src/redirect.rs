@@ -2,7 +2,7 @@ use crate::replace::{replace_all, Replacement};
 use crate::resolve::{CurlResolver, Resolver};
 use crate::url::find_all_urls;
 use anyhow::{Context, Result};
-use log::{debug, info};
+use log::{debug, info, warn};
 use rayon::prelude::*;
 use regex::Regex;
 use std::ffi::OsStr;
@@ -73,7 +73,13 @@ impl<R: Resolver> Redirector<R> {
     pub fn fix_file(&self, file: &Path) -> Result<()> {
         info!("Fixing redirects in {:?}", &file);
 
-        let content = fs::read_to_string(&file)?;
+        let content = match fs::read_to_string(&file) {
+            Err(err) => {
+                warn!("Ignored non-UTF8 file {:?}: {}", &file, err);
+                return Ok(());
+            }
+            Ok(s) => s,
+        };
         let replacements = self.find_replacements(&content);
         if replacements.is_empty() {
             info!("Fixed no link in {:?} (skipped overwriting)", &file);
