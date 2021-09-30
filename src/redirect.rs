@@ -95,13 +95,9 @@ impl<R: Resolver> Redirector<R> {
     pub fn fix_all_files<'a>(&self, paths: impl Iterator<Item = &'a OsStr>) -> Result<usize> {
         paths
             .flat_map(WalkDir::new)
-            .filter_map(|entry| match entry {
-                Ok(entry) => match entry.metadata() {
-                    Ok(m) if m.is_file() => Some(Ok(entry)),
-                    Ok(_) => None,
-                    Err(err) => Some(Err(err)),
-                },
-                Err(err) => Some(Err(err)),
+            .filter(|entry| match entry {
+                Ok(e) => e.file_type().is_file(),
+                Err(_) => true,
             })
             .map(|entry| {
                 let path = entry?.into_path();
