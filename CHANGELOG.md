@@ -1,3 +1,11 @@
+<a name="v1.1.3"></a>
+# [v1.1.3](https://github.com/rhysd/fixred/releases/tag/v1.1.3) - 30 Sep 2021
+
+- Ignore non-UTF8 files. This is useful when you specify some directories to update files recursively. Now fixred simply ignores non-UTF8 file. Previously fixred stopped when finding a non-UTF8 file. To know which files were ignored, try `--verbose` flag.
+
+[Changes][v1.1.3]
+
+
 <a name="v1.1.2"></a>
 # [v1.1.2](https://github.com/rhysd/fixred/releases/tag/v1.1.2) - 29 Sep 2021
 
@@ -6,7 +14,7 @@
   [dependencies]
   fixred = { version = "1", default-features = false, features = [] }
   ```
-- Add an introduction dedicated for [the API document](https://docs.rs/crate/fixred). Previously `README.md` file at root of this repository was used but it is basically for `fixred` executable.
+- Add an introduction dedicated for [the API document](https://docs.rs/fixred/). Previously `README.md` file at root of this repository was used but it is basically for `fixred` executable.
 
 [Changes][v1.1.2]
 
@@ -56,6 +64,7 @@ See the document to know how to install fixred: https://github.com/rhysd/fixred#
 [Changes][v1.0.0]
 
 
+[v1.1.3]: https://github.com/rhysd/fixred/compare/v1.1.2...v1.1.3
 [v1.1.2]: https://github.com/rhysd/fixred/compare/v1.1.1...v1.1.2
 [v1.1.1]: https://github.com/rhysd/fixred/compare/v1.1.0...v1.1.1
 [v1.1.0]: https://github.com/rhysd/fixred/compare/v1.0.2...v1.1.0
