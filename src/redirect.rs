@@ -179,6 +179,21 @@ mod tests {
     }
 
     #[test]
+    fn ignore_non_utf8_file() {
+        // Invalid UTF-8 sequence
+        let content = b"\xf0\x28\x8c\xbc";
+        std::str::from_utf8(content).unwrap_err();
+
+        let entries = &[TestDirEntry::Binary("test.bin", content)];
+        let dir = TestDir::new(entries).unwrap();
+
+        let red = TestRedirector::default();
+        let path = dir.root.join("test.bin");
+        let count = red.fix_all_files(iter::once(path.as_ref())).unwrap();
+        assert_eq!(count, 1);
+    }
+
+    #[test]
     fn read_file_error() {
         let red = TestRedirector::default();
         let mut p = PathBuf::new();

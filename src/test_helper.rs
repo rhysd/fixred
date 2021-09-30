@@ -29,6 +29,7 @@ impl Write for FlushErrorWriter {
 pub(crate) enum TestDirEntry<'a> {
     Dir(&'a str),
     File(&'a str, &'a str),
+    Binary(&'a str, &'a [u8]),
 }
 
 impl<'a> TestDirEntry<'a> {
@@ -37,6 +38,7 @@ impl<'a> TestDirEntry<'a> {
         let p = match self {
             Self::Dir(p) => p,
             Self::File(p, _) => p,
+            Self::Binary(p, _) => p,
         };
         for name in p.split('/').filter(|n| !n.is_empty()) {
             path.push(name);
@@ -54,6 +56,10 @@ impl<'a> TestDirEntry<'a> {
             TestDirEntry::File(_, content) => {
                 fs::write(&path, content.as_bytes())?;
                 Ok(Some((path, content.to_string())))
+            }
+            TestDirEntry::Binary(_, content) => {
+                fs::write(&path, content)?;
+                Ok(None)
             }
         }
     }
