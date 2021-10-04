@@ -125,12 +125,13 @@ FIXRED_LOG=info fixred ./docs
 FIXRED_LOG=debug fixred ./docs
 ```
 
-### Real-world example
+### Real-world examples
 
-- https://github.com/rhysd/actionlint/commit/0b7375279d2caf63203701eccc39ab091cc83a50
-- https://github.com/rhysd/actionlint/commit/a3f270b313affa81cc41709587cbd2588d4ac4ce
-
-Here is an example of usage in [actionlint][] project.
+- Followed the large update of GitHub document links
+  - https://github.com/rhysd/actionlint/commit/0b7375279d2caf63203701eccc39ab091cc83a50
+  - https://github.com/rhysd/actionlint/commit/a3f270b313affa81cc41709587cbd2588d4ac4ce
+- Followed the repository transition
+  - https://github.com/benchmark-action/github-action-benchmark/commit/450cb083343edcf0fb6d82a917f890eaf2cd073f
 
 ## Use this tool as Rust library
 
@@ -168,6 +169,5 @@ Distributed under [the MIT license](./LICENSE.txt).
 [ci-badge]: https://github.com/rhysd/fixred/actions/workflows/ci.yaml/badge.svg
 [crates-io]: https://crates.io/crates/fixred
 [crates-io-badge]: https://img.shields.io/crates/v/fixred.svg
-[actionlint]: https://github.com/rhysd/actionlint
 [docker]: https://hub.docker.com/r/rhysd/fixred
 [api]: https://docs.rs/fixred
