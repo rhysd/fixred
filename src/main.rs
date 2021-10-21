@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use clap::{App, AppSettings, Arg};
+use clap::{App, Arg};
 use fixred::redirect::CurlRedirector;
 use log::{debug, info, log_enabled, Level, LevelFilter};
 use regex::Regex;
@@ -32,7 +32,6 @@ fn main() -> Result<()> {
             Note that fixred only handles UTF8 files. Non-UTF8 files are ignored.\n\n\
             Visit https://github.com/rhysd/fixred#usage for more details with several examples.",
         )
-        .global_setting(AppSettings::ColoredHelp)
         .arg(
             Arg::new("shallow")
                 .short('s')
