@@ -1,7 +1,15 @@
+<a name="v1.1.4"></a>
+# [v1.1.4](https://github.com/rhysd/fixred/releases/tag/v1.1.4) - 21 Oct 2021
+
+- Fix `cargo install fixred` failed due to new release of `clap` crate v3.0.0-beta.5
+
+[Changes][v1.1.4]
+
+
 <a name="v1.1.3"></a>
 # [v1.1.3](https://github.com/rhysd/fixred/releases/tag/v1.1.3) - 30 Sep 2021
 
-- Ignore non-UTF8 files. This is useful when you specify some directories to update files recursively. Now fixred simply ignores non-UTF8 file. Previously fixred stopped when finding a non-UTF8 file. To know which files were ignored, try `--verbose` flag.
+- Ignore non-UTF8 files. This is useful when you specify some directories to update files recursively. Now fixred fixes only UTF-8 files in directories recursively. Previously fixred stopped when finding a non-UTF8 file. To know which files were ignored, try `--verbose` flag.
 
 [Changes][v1.1.3]
 
@@ -64,6 +72,7 @@ See the document to know how to install fixred: https://github.com/rhysd/fixred#
 [Changes][v1.0.0]
 
 
+[v1.1.4]: https://github.com/rhysd/fixred/compare/v1.1.3...v1.1.4
 [v1.1.3]: https://github.com/rhysd/fixred/compare/v1.1.2...v1.1.3
 [v1.1.2]: https://github.com/rhysd/fixred/compare/v1.1.1...v1.1.2
 [v1.1.1]: https://github.com/rhysd/fixred/compare/v1.1.0...v1.1.1
